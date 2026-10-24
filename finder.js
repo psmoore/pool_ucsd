@@ -76,6 +76,9 @@
       (n.children || []).forEach((c) => walk(c, fac, n.type === "pool" ? n.id : pool, n.id));
     };
     (facilities || []).forEach((f) => walk(f, f.longName, null, null));
+    // A facility with one pool doesn't name it ("Pool 2 of 6 lanes" says nothing the page doesn't).
+    const poolsAt = {};
+    for (const id in poolName) poolsAt[facOf[id]] = (poolsAt[facOf[id]] || 0) + 1;
     // Pool Relay geocodes each facility from its address; use that for the map pin.
     for (const f of facilities || []) {
       const p = POOLS.find((x) => x.facility === f.longName);
@@ -95,7 +98,7 @@
         ...o, fac, kinds: o.allDay ? [] : kindsOf(o, groupName),
         groupPaths: (o.groupIds || []).map((g) => groupPath[g] || ""),
         // Which pool; a booking on the whole center (lanes not posted yet) has none.
-        where: pool ? poolName[pool] : "", wanted: lanes.length,
+        where: pool && poolsAt[fac] > 1 ? poolName[pool] : "", wanted: lanes.length,
         title: T(o.title), orig: o.title,
         laneText: !lanes.length || !total ? "" : lanes.length >= total ? T("all") + ` ${total} ` + T("lanes") : `${lanes.length} ` + T("of") + ` ${total} ` + T("lanes"),
       };
@@ -157,7 +160,9 @@
       const o = live[0];
       const part = (o.parts || [o]).find((p) => mins(p.start) <= NOW && NOW < mins(p.end)) || o;
       const pools = live.map((x) => { const p = (x.parts || [x]).find((q) => mins(q.start) <= NOW && NOW < mins(q.end)) || x; return [x.where, p.laneText].filter(Boolean).join(" "); }).filter(Boolean);
-      line = `${T("In the water now")}: ${o.title}${pools.length ? ` (${pools.join("; ")})` : ""}, ${T("until")} ${clock(live.reduce((m, x) => (x.end > m ? x.end : m), o.end))}`;
+      const uniq = [...new Set(pools)];
+      const classes = live.length > 1 && !live.some(pub);
+      line = `${T("In the water now")}: ${classes ? `${live.length} ${T("classes")}` : o.title}${!classes && uniq.length ? ` (${uniq.join("; ")})` : ""}, ${T("until")} ${clock(live.reduce((m, x) => (x.end > m ? x.end : m), o.end))}`;
     } else if (later.length) {
       state = isToday ? "soon" : "open";
       const o = later[0];
@@ -338,7 +343,9 @@
           .map((k) => `<b>${esc(T(KINDS[k].label))}:</b> ${esc(whenText(evs, (o) => o.kinds.includes(k)))}`);
         const also = ["fit", "learn"].filter((k) => evs.some((o) => !o.allDay && o.date >= TODAY && o.date < addDays(TODAY, AHEAD) && o.kinds.includes(k)))
           .map((k) => T(KINDS[k].label).toLowerCase());
-        if (also.length) lines.push(`${T("Also")}: ${esc(also.join(` ${T("and")} `))}.`);
+        // A pool with no lap swim reads its classes' hours instead of "Also: classes".
+        if (!lines.length && evs.some((o) => !o.allDay && o.date >= TODAY && o.kinds.includes("learn"))) lines.push(`<b>${esc(T("Classes"))}:</b> ${esc(whenText(evs, (o) => o.kinds.includes("learn")))}`);
+        else if (also.length) lines.push(`${T("Also")}: ${esc(also.join(` ${T("and")} `))}.`);
         el.innerHTML = lines.join("<br>") || esc(T("Nothing scheduled in the next four weeks"));
       } else if (mode === "dates") {
         // Each coming date of a program: "Fri, Nov 13, 5–9pm; Sat, Nov 14, 8am–6pm".
@@ -474,7 +481,7 @@
     </div>
     <div class="summary" aria-live="polite"><span class="muted">Loading every pool's schedule…</span></div>
     <div class="split"><ol class="results"></ol><div id="map" role="region" aria-label="Map of pools"></div></div>
-    <div class="legend"><span class="k-lap">Lap swim</span><span class="k-learn">Lessons &amp; teams</span><span class="k-other">Other</span></div>`;
+    <div class="legend"><span class="k-lap">Lap swim</span><span class="k-learn">Classes &amp; teams</span><span class="k-other">Other</span></div>`;
   const list = root.querySelector(".results");
   const summary = root.querySelector(".summary");
 
