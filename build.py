@@ -119,7 +119,7 @@ page("canyonview.html", "Canyonview Aquatic Center", f"""
       <section class="now" aria-live="polite"><h2>Right now</h2>
         <div id="today" data-view="{V['canyonview']}" data-pool="canyonview"><p class="muted">Loading today’s schedule…</p></div></section>
       <aside class="hours"><h2>Lap swim &amp; spa</h2>
-        <div {live("hours", "canyonview", format="dl", title="Lap Swim")}><p class="muted">…</p></div>
+        <div {live("hours", "canyonview", format="dl", title="Lap Swim", whole=0)}><p class="muted">…</p></div>
         <p class="small" style="margin:0"><b>Masters workouts:</b> <span {live("when", "canyonview", title="Masters Swim Workout", gap=0)}>…</span></p>
         <div class="adjusted" {live("exceptions", "canyonview", title="Lap Swim")} hidden></div>
         <p class="small muted" style="margin:6px 0 0">Entry ends 30 minutes before closing.</p>

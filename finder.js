@@ -68,11 +68,13 @@
     const { occurrences, facilities, groups } = await r.json();
     // Which facility and pool every area belongs to, and how many lanes each pool has.
     // Lanes are counted per layout: a 50 m pool has 20 short-course lanes OR 8 long-course ones.
-    const facOf = {}, poolOf = {}, poolName = {}, isLane = {}, lanesIn = {}, layoutOf = {};
+    const facOf = {}, poolOf = {}, poolName = {}, isLane = {}, lanesIn = {}, layoutOf = {}, lanesUnder = {};
     const walk = (n, fac, pool, parent) => {
       facOf[n.id] = fac; if (pool) poolOf[n.id] = pool;
       if (n.type === "pool") poolName[n.id] = n.longName;
       if (n.type === "lane") { isLane[n.id] = true; layoutOf[n.id] = parent; lanesIn[parent] = (lanesIn[parent] || 0) + 1; }
+      // A booking on a whole layout (Long Course) holds every lane in it; the pool's own lanes for a pool without layouts.
+      if (n.type === "config" || n.type === "pool") lanesUnder[n.id] = (n.children || []).filter((c) => c.type === "lane").map((c) => c.id);
       (n.children || []).forEach((c) => walk(c, fac, n.type === "pool" ? n.id : pool, n.id));
     };
     (facilities || []).forEach((f) => walk(f, f.longName, null, null));
@@ -91,7 +93,7 @@
     const byFac = {};
     for (const o of occurrences) {
       const fac = facOf[o.areaIds?.[0]]; if (!fac) continue;
-      const lanes = o.areaIds.filter((a) => isLane[a]);
+      const lanes = o.areaIds.flatMap((a) => (isLane[a] ? [a] : lanesUnder[a] || []));
       const pool = poolOf[o.areaIds[0]];
       const total = lanes.length ? lanesIn[layoutOf[lanes[0]]] || 0 : 0;
       const ev = {
@@ -332,7 +334,8 @@
         el.textContent = whenText(evs, inProgram);
         MERGE_GAP = 15;
       } else if (mode === "hours") {
-        const w = weekly(evs, (o) => inProgram(o) && !/^closes early/i.test(o.orig || o.title), true, true);
+        // data-whole="0": each stretch ("6am–1pm and 3–8pm") instead of first session to last.
+        const w = weekly(evs, (o) => inProgram(o) && !/^closes early/i.test(o.orig || o.title), el.dataset.whole !== "0", true);
         const hours = (w ? w.hours : Array(7).fill("")).map((h) => h || T("Closed"));
         const groups = dayGroups(hours, el.dataset.format === "dl" ? "long" : "short");
         el.innerHTML = el.dataset.format === "dl"
@@ -450,7 +453,7 @@
         const cell = (c) => {
           const on = evs.filter((o) => !o.allDay && o.date === d && o.where === c);
           if (!on.length) return `<td><span class="muted">—</span></td>`;
-          return `<td>${on.map((o) => `<div>${span(o.start, o.end)}${lanesOf(o) ? ` <span class="n">${esc(lanesOf(o))}</span>` : ""}${/^lap swim$/i.test(o.orig || o.title) ? "" : ` <span class="n">${esc(o.title)}</span>`}</div>`).join("")}</td>`;
+          return `<td>${on.map((o) => `<div>${span(o.start, o.end)}${lanesOf(o) ? ` <span class="n">${esc(lanesOf(o))}</span>` : ""}${` <span class="n">${esc(o.title)}</span>`}</div>`).join("")}</td>`;
         };
         return `<tr>${head}${shown.map(([c]) => cell(c)).join("")}</tr>`;
       }).join("");
