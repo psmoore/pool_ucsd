@@ -122,7 +122,7 @@ page("canyonview.html", "Canyonview Aquatic Center", f"""
         <div id="today" data-view="{V['canyonview']}" data-pool="canyonview"><p class="muted">Loading today’s schedule…</p></div></section>
       <aside class="hours"><h2>Lap swim &amp; spa</h2>
         <div {live("hours", "canyonview", format="dl", title="Lap Swim", whole=0)}><p class="muted">…</p></div>
-        <p class="small" style="margin:0"><b>Masters workouts:</b> <span {live("when", "canyonview", title="Masters Swim Workout", gap=0)}>…</span></p>
+        <p class="small" style="margin:0"><b>Masters workouts:</b> <span {live("when", "canyonview", title="Masters Swim Workout", gap=-1)}>…</span></p>
         <div class="adjusted" {live("exceptions", "canyonview", title="Lap Swim")} hidden></div>
         <p class="small muted" style="margin:6px 0 0">Entry ends 30 minutes before closing.</p>
       </aside>
@@ -204,7 +204,7 @@ page("masters.html", "Masters Swimming", f"""
       Head Coach Ron “Sickie” Marcikic. Each workout is 90 minutes.</p>
     <div class="top2">
       <aside class="hours"><h2>Workouts</h2>
-        <p style="margin:0" {live("when", "canyonview", title="Masters Swim Workout", gap=0)}>…</p>
+        <p style="margin:0" {live("when", "canyonview", title="Masters Swim Workout", gap=-1)}>…</p>
         <div class="adjusted" {live("exceptions", "canyonview", title="Masters Swim Workout")} hidden></div>
         <p class="small muted" style="margin:6px 0 0">Weekend workouts can be cancelled for other aquatic events; when they are, this changes too.</p></aside>
       <section class="now"><h2>Contact</h2><p class="small" style="margin:0">Ron “Sickie” Marcikic, Masters Swim Director<br>(858) 534-8124 · sickie@ucsd.edu</p></section>

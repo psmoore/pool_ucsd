@@ -329,7 +329,7 @@
         MERGE_GAP = 15;
         el.textContent = parts.join(" · ") || el.dataset.empty || T("Nothing scheduled in the next four weeks");
       } else if (mode === "when") {
-        // data-gap="0": list each class on its own instead of reading back-to-back classes as one stretch.
+        // data-gap="0": list each class on its own instead of reading back-to-back classes as one stretch; "-1" keeps even touching ones apart.
         if (el.dataset.gap !== undefined) MERGE_GAP = +el.dataset.gap;
         el.textContent = whenText(evs, inProgram);
         MERGE_GAP = 15;
@@ -423,7 +423,8 @@
       load(week.dataset.view, TODAY, addDays(TODAY, 7)).then((byFac) => {
         const p = POOLS.find((x) => x.slug === week.dataset.pool) || POOLS[0];
         const evs = byFac[p.facility] || [];
-        const kinds = [["lap", "Lap swim"], ["learn", "Lessons, classes & teams"], ["other", "Other"]].filter(([k]) => k !== "other" || evs.some((o) => o.kinds.includes("other")));
+        const wk = evs.filter((o) => !o.allDay && o.date >= days7[0] && o.date <= days7[6]);
+        const kinds = [["lap", "Lap swim"], ["learn", "Lessons, classes & teams"], ["other", "Other"]].filter(([k]) => wk.some((o) => o.kinds.includes(k)));
         const iv = (list) => { const out = []; list.map((o) => [mins(o.start), mins(o.end)]).sort((a, b) => a[0] - b[0])
           .forEach(([a, b]) => { if (out.length && a <= out[out.length - 1][1]) out[out.length - 1][1] = Math.max(out[out.length - 1][1], b); else out.push([a, b]); });
           return out.map(([a, b]) => span(hhmm(a), hhmm(b))).join(", "); };
