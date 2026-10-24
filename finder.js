@@ -116,7 +116,8 @@
       const merged = [];
       for (const o of byFac[f]) {
         const prev = merged.findLast?.((p) => p.date === o.date && p.title === o.title && p.where === o.where && !p.allDay) ?? null;
-        if (prev && !o.allDay && prev.end === o.start) {
+        // Back-to-back on the same lanes is a second session (two Masters workouts), not one session changing lanes.
+        if (prev && !o.allDay && prev.end === o.start && prev.parts[prev.parts.length - 1].laneText !== o.laneText) {
           prev.end = o.end; prev.parts.push(o);
         } else merged.push({ ...o, parts: [o] });
       }
