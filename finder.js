@@ -62,7 +62,7 @@
   }
   async function loadOne(view, from, to) {
     // ?preview reads a local copy of the planned schedule instead of the live one.
-    const r = await fetch(/[?&]preview\b/.test(location.search) ? new URL("preview-data.json", document.querySelector('script[src$="finder.js"]').src).href
+    const r = await fetch(/[?&]preview\b/.test(location.search) ? new URL("preview-data.json", document.querySelector('script[src*="finder.js"]').src).href
       : `${API}${view}/project?from=${from}&to=${to}`);
     if (!r.ok) throw new Error(String(r.status));
     const { occurrences, facilities, groups } = await r.json();

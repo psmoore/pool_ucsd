@@ -4,7 +4,7 @@ Masters Swimming, and Clubs & Varsity, with every hour, class time, practice and
 finder.js (#finder, #today, #week, data-live). Nothing about WHEN a pool is open is typed here; only prices, ages,
 policies and facts about the water.
 Run: python3 build.py"""
-import html, json
+import hashlib, html, json
 
 E = html.escape
 V = {"canyonview": "cKyAVO7EZFuRYQSwQe1in4", "natatorium": "xT8SP4qsZAvolwR9xYrNIq"}  # Pool Relay share tokens
@@ -30,6 +30,8 @@ MENU = [("Facility Hours & Maps", None), ("Aquatics", "index.html"), ("Canyonvie
         ("Natatorium", "natatorium.html"), ("Aquatic Classes", "aquatic-classes.html"), ("Masters Swimming", "masters.html"),
         ("Clubs & Varsity", "clubs.html"), ("Memberships", None)]
 
+VER = hashlib.sha1((open("finder.js").read() + open("style.css").read()).encode()).hexdigest()[:8]  # cache-busts both on change
+
 def page(file, title, body, contact):
     menu = "".join(f'<a class="{"sub" if 1 < i < 7 else ""}{" here" if href == file else ""}" href="{href or "#"}">{E(label)}</a>'
                    for i, (label, href) in enumerate(MENU))
@@ -44,7 +46,7 @@ def page(file, title, body, contact):
 <title>{E(title)} | UC San Diego Recreation preview</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v={VER}">
 </head>
 <body>
 <div class="preview-note"><b>Unofficial preview.</b> Not a UC San Diego page &mdash; a mock-up of <a href="{REC}" target="_blank" rel="noopener noreferrer">Recreation's pool pages</a> with every pool on one live schedule.</div>
@@ -63,7 +65,7 @@ def page(file, title, body, contact):
   <div><h4>About this preview</h4><p>Built to demonstrate embedded <a href="https://www.poolrelay.com" target="_blank" rel="noopener">Pool Relay</a> schedules. Not operated by or affiliated with UC San Diego. Schedules entered from Recreation's facility, class, Masters and Sports Clubs pages and ucsdtritons.com on October 24, 2026; which pool and lanes each program uses is our estimate.</p></div>
 </div></footer>
 <script>window.POOLS = {json.dumps([{k: v for k, v in p.items() if k != "blurb"} for p in POOLS])};</script>
-<script src="finder.js"></script>
+<script src="finder.js?v={VER}"></script>
 </body>
 </html>
 """
